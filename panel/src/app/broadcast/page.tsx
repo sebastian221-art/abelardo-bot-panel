@@ -66,7 +66,7 @@ export default function BroadcastPage() {
         ) : (
           <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
             {items.map((item: unknown) => {
-              const b = item as Record<string,unknown>
+              const b = item as Record<string, string | number | boolean | null | undefined>
               const color = STATUS_COLOR[b.status as string] || '#71717a'
               const isSent = b.status === 'sent'
               const canSend = b.status === 'draft' || b.status === 'scheduled'
@@ -122,9 +122,9 @@ export default function BroadcastPage() {
                   {isSent && (
                     <div style={{ display:'flex', gap:20, borderTop:'1px solid #27272a', paddingTop:12, marginTop:4 }}>
                       {[
-                        { label:'Objetivo',   val: b.total_targets, color:'#71717a' },
-                        { label:'Enviados',   val: b.sent_count,    color:'#22c55e' },
-                        { label:'Fallidos',   val: b.failed_count,  color:'#ef4444' },
+                        { label:'Objetivo',   val: b.total_targets as number, color:'#71717a' },
+                        { label:'Enviados',   val: b.sent_count as number,    color:'#22c55e' },
+                        { label:'Fallidos',   val: b.failed_count as number,  color:'#ef4444' },
                       ].map(s => (
                         <div key={s.label}>
                           <p style={{ color:'#52525b', fontSize:10, textTransform:'uppercase' }}>{s.label}</p>
