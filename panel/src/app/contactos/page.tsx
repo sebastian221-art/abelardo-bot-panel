@@ -1,17 +1,39 @@
 'use client'
-// 📄 panel/src/app/contactos/page.tsx
+// 📄 panel/src/app/contactos/page.tsx  ← REEMPLAZA EL ANTERIOR
 import { useEffect, useState, useRef } from 'react'
 import Layout from '@/components/Layout'
 import { getContacts, importContacts } from '@/lib/api'
-import { Search, Upload, ChevronLeft, ChevronRight, CheckCircle, XCircle } from 'lucide-react'
+import { Search, Upload, ChevronLeft, ChevronRight, CheckCircle, XCircle, UserPlus, X } from 'lucide-react'
+
+const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+
+const inputSt: React.CSSProperties = {
+  width:'100%', padding:'10px 12px', background:'#09090b',
+  border:'1px solid #27272a', borderRadius:8, color:'#fff',
+  fontSize:13, outline:'none', boxSizing:'border-box',
+}
+const labelSt: React.CSSProperties = {
+  display:'block', color:'#a1a1aa', fontSize:11,
+  fontWeight:600, marginBottom:6, textTransform:'uppercase',
+}
 
 export default function ContactosPage() {
-  const [data,    setData]    = useState<Record<string,unknown>>({ total:0, contacts:[] })
-  const [page,    setPage]    = useState(1)
-  const [search,  setSearch]  = useState('')
-  const [optedIn, setOptedIn] = useState('')
-  const [loading, setLoading] = useState(true)
+  const [data,      setData]      = useState<Record<string,unknown>>({ total:0, contacts:[] })
+  const [page,      setPage]      = useState(1)
+  const [optedIn,   setOptedIn]   = useState('')
+  const [loading,   setLoading]   = useState(true)
   const [importing, setImporting] = useState(false)
+  const [showModal, setShowModal] = useState(false)
+  const [saving,    setSaving]    = useState(false)
+  const [formError, setFormError] = useState('')
+
+  // Formulario contacto manual
+  const [phone,      setPhone]      = useState('')
+  const [name,       setName]       = useState('')
+  const [city,       setCity]       = useState('')
+  const [department, setDepartment] = useState('')
+  const [optedInNew, setOptedInNew] = useState(false)
+
   const fileRef = useRef<HTMLInputElement>(null)
 
   async function load() {
@@ -30,9 +52,37 @@ export default function ContactosPage() {
     if (!file) return
     setImporting(true)
     const r = await importContacts(file)
-    alert(`✅ Importados: ${r.created} nuevos, ${r.updated} actualizados`)
+    alert(`✅ Importados: ${(r as Record<string,number>).created} nuevos, ${(r as Record<string,number>).updated} actualizados`)
     setImporting(false)
     load()
+  }
+
+  function resetForm() {
+    setPhone(''); setName(''); setCity(''); setDepartment(''); setOptedInNew(false); setFormError('')
+  }
+
+  async function handleAddContact() {
+    setFormError('')
+    if (!phone.trim()) return setFormError('El teléfono es obligatorio')
+
+    setSaving(true)
+    try {
+      const token = localStorage.getItem('token')
+      const res = await fetch(`${API}/contacts`, {
+        method:  'POST',
+        headers: { 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ phone, name, city, department, opted_in: optedInNew }),
+      })
+      if (res.status === 409) return setFormError('Este número ya existe en los contactos')
+      if (!res.ok) return setFormError('Error al crear el contacto')
+      setShowModal(false)
+      resetForm()
+      load()
+    } catch {
+      setFormError('Error de conexión')
+    } finally {
+      setSaving(false)
+    }
   }
 
   const contacts = (data.contacts as unknown[]) || []
@@ -54,8 +104,15 @@ export default function ContactosPage() {
               <option value="true">Con opt-in</option>
               <option value="false">Sin opt-in</option>
             </select>
-            <button onClick={() => fileRef.current?.click()}
-              disabled={importing}
+
+            {/* Agregar contacto manual */}
+            <button onClick={() => { resetForm(); setShowModal(true) }}
+              style={{ display:'flex', alignItems:'center', gap:7, padding:'8px 16px', borderRadius:8, border:'none', background:'#FCD116', color:'#09090b', fontSize:13, fontWeight:700, cursor:'pointer' }}>
+              <UserPlus size={14}/> Agregar contacto
+            </button>
+
+            {/* Importar CSV */}
+            <button onClick={() => fileRef.current?.click()} disabled={importing}
               style={{ display:'flex', alignItems:'center', gap:7, padding:'8px 16px', borderRadius:8, border:'1px solid #27272a', background:'transparent', color:'#a1a1aa', fontSize:13, cursor:'pointer' }}>
               <Upload size={14}/> {importing ? 'Importando...' : 'Importar CSV'}
             </button>
@@ -77,7 +134,7 @@ export default function ContactosPage() {
               {loading ? (
                 <tr><td colSpan={6} style={{ padding:40, textAlign:'center', color:'#52525b' }}>Cargando...</td></tr>
               ) : contacts.length === 0 ? (
-                <tr><td colSpan={6} style={{ padding:40, textAlign:'center', color:'#52525b' }}>Sin contactos. Importa tu CSV de 2.000 firmantes.</td></tr>
+                <tr><td colSpan={6} style={{ padding:40, textAlign:'center', color:'#52525b' }}>Sin contactos. Importa tu CSV o agrega uno manualmente.</td></tr>
               ) : contacts.map((c: unknown) => {
                 const contact = c as Record<string,unknown>
                 return (
@@ -117,6 +174,74 @@ export default function ContactosPage() {
           </div>
         )}
       </div>
+
+      {/* Modal agregar contacto */}
+      {showModal && (
+        <div style={{
+          position:'fixed', inset:0, background:'rgba(0,0,0,0.7)',
+          display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000,
+        }}>
+          <div style={{ background:'#18181b', border:'1px solid #27272a', borderRadius:16, padding:28, width:420, maxWidth:'95vw' }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:22 }}>
+              <h2 style={{ color:'#fff', fontSize:16, fontWeight:700 }}>Agregar contacto</h2>
+              <button onClick={() => setShowModal(false)}
+                style={{ background:'transparent', border:'none', color:'#71717a', cursor:'pointer' }}>
+                <X size={18}/>
+              </button>
+            </div>
+
+            <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+              <div>
+                <label style={labelSt}>Teléfono * <span style={{ color:'#52525b', fontWeight:400, textTransform:'none' }}>(sin +57)</span></label>
+                <input value={phone} onChange={e => setPhone(e.target.value)}
+                  placeholder="3001234567" style={inputSt}/>
+              </div>
+              <div>
+                <label style={labelSt}>Nombre</label>
+                <input value={name} onChange={e => setName(e.target.value)}
+                  placeholder="Juan Pérez" style={inputSt}/>
+              </div>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+                <div>
+                  <label style={labelSt}>Ciudad</label>
+                  <input value={city} onChange={e => setCity(e.target.value)}
+                    placeholder="San Gil" style={inputSt}/>
+                </div>
+                <div>
+                  <label style={labelSt}>Departamento</label>
+                  <input value={department} onChange={e => setDepartment(e.target.value)}
+                    placeholder="Santander" style={inputSt}/>
+                </div>
+              </div>
+              <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                <input type="checkbox" id="optin" checked={optedInNew}
+                  onChange={e => setOptedInNew(e.target.checked)}
+                  style={{ width:16, height:16, cursor:'pointer' }}/>
+                <label htmlFor="optin" style={{ color:'#a1a1aa', fontSize:13, cursor:'pointer' }}>
+                  Ya tiene opt-in (aceptó recibir mensajes)
+                </label>
+              </div>
+
+              {formError && (
+                <p style={{ color:'#fca5a5', fontSize:12, background:'#3f1212', padding:'8px 12px', borderRadius:7 }}>
+                  {formError}
+                </p>
+              )}
+
+              <div style={{ display:'flex', gap:10, marginTop:4 }}>
+                <button onClick={() => setShowModal(false)}
+                  style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #27272a', background:'transparent', color:'#a1a1aa', fontSize:13, cursor:'pointer' }}>
+                  Cancelar
+                </button>
+                <button onClick={handleAddContact} disabled={saving}
+                  style={{ flex:2, padding:'10px', borderRadius:8, border:'none', background:'#FCD116', color:'#09090b', fontSize:13, fontWeight:700, cursor:'pointer' }}>
+                  {saving ? 'Guardando...' : '✅ Agregar contacto'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   )
 }
