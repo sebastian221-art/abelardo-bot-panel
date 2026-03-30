@@ -6,19 +6,22 @@ import { logout } from '@/lib/auth'
 import {
   LayoutDashboard, Users, MessageSquare, Send, BarChart2,
   ClipboardList, Star, Settings, LogOut, MessageCircle, BookOpen,
+  Video, UsersRound,
 } from 'lucide-react'
 
 const NAV = [
-  { href: '/dashboard',      icon: LayoutDashboard, label: 'Dashboard'           },
-  { href: '/contactos',      icon: Users,           label: 'Contactos'           },
-  { href: '/conversaciones', icon: MessageSquare,   label: 'Conversaciones'      },
-  { href: '/broadcast',      icon: Send,            label: 'Broadcasts'          },
-  { href: '/encuestas',      icon: ClipboardList,   label: 'Encuestas'           },
-  { href: '/embajadores',    icon: Star,            label: 'Embajadores'         },
-  { href: '/analytics',      icon: BarChart2,       label: 'Analítica'           },
-  { href: '/conocimiento',   icon: BookOpen,        label: 'Base de Conocimiento'},
-  { href: '/chat-prueba',    icon: MessageCircle,   label: 'Chat de prueba'      },
-  { href: '/usuarios',       icon: Settings,        label: 'Usuarios'            },
+  { href: '/dashboard',      icon: LayoutDashboard, label: 'Dashboard'            },
+  { href: '/contactos',      icon: Users,           label: 'Contactos'            },
+  { href: '/conversaciones', icon: MessageSquare,   label: 'Conversaciones'       },
+  { href: '/broadcast',      icon: Send,            label: 'Broadcasts'           },
+  { href: '/encuestas',      icon: ClipboardList,   label: 'Encuestas'            },
+  { href: '/embajadores',    icon: Star,            label: 'Embajadores'          },
+  { href: '/analytics',      icon: BarChart2,       label: 'Analítica'            },
+  { href: '/conocimiento',   icon: BookOpen,        label: 'Base de Conocimiento' },
+  { href: '/heygen',         icon: Video,           label: 'Videos Avatar'        },
+  { href: '/grupos',         icon: UsersRound,      label: 'Grupos'               },
+  { href: '/chat-prueba',    icon: MessageCircle,   label: 'Chat de prueba'       },
+  { href: '/usuarios',       icon: Settings,        label: 'Usuarios'             },
 ]
 
 export default function Sidebar() {
@@ -68,7 +71,7 @@ export default function Sidebar() {
               padding: '9px 10px', borderRadius: 8, marginBottom: 2,
               textDecoration: 'none',
               background: active ? '#1e293b' : 'transparent',
-              color:       active ? '#fff'    : '#71717a',
+              color:      active ? '#fff'    : '#71717a',
               fontSize: 13, fontWeight: active ? 600 : 400,
             }}>
               <Icon size={16} style={{ color: active ? '#FCD116' : '#52525b', flexShrink: 0 }} />
