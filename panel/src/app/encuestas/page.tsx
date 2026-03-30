@@ -6,11 +6,11 @@ import { createBroadcast, sendBroadcast, previewBroadcast } from '@/lib/api'
 import { ClipboardList, Send, Users } from 'lucide-react'
 
 const SEGMENTS = [
-  { value: 'todos',      label: 'Todos',          desc: 'Todos los contactos' },
-  { value: 'opted_in',  label: 'Solo opt-in',     desc: 'Quienes aceptaron mensajes' },
-  { value: 'city',      label: 'Por ciudad',      desc: 'Ej: San Gil' },
-  { value: 'department',label: 'Por departamento',desc: 'Ej: Santander' },
-  { value: 'interest',  label: 'Por interés',     desc: 'Ej: seguridad, salud' },
+  { value: 'todos',       label: 'Todos',           desc: 'Todos los contactos' },
+  { value: 'opted_in',   label: 'Solo opt-in',      desc: 'Quienes aceptaron mensajes' },
+  { value: 'city',       label: 'Por ciudad',       desc: 'Ej: San Gil' },
+  { value: 'department', label: 'Por departamento', desc: 'Ej: Santander' },
+  { value: 'interest',   label: 'Por interés',      desc: 'Ej: seguridad, salud' },
 ]
 
 const PLANTILLAS = [
@@ -32,7 +32,7 @@ const PLANTILLAS = [
   },
 ]
 
-const EMOJIS = ['1️⃣','2️⃣','3️⃣','4️⃣','5️⃣']
+const EMOJIS = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣']
 
 const inputSt: React.CSSProperties = {
   width: '100%', padding: '10px 12px', background: '#09090b',
@@ -69,10 +69,8 @@ export default function EncuestasPage() {
     if (optsValidas.length < 2) return setError('Agrega al menos 2 opciones de respuesta')
 
     setLoading(true)
-    try:
-      // Construir mensaje con todas las opciones válidas
+    try {
       const lineasOpciones = optsValidas.map((op, i) => `${EMOJIS[i]} ${op}`).join('\n')
-
       const mensaje =
         `📊 *Encuesta de la campaña* 🇨🇴\n\n` +
         `*${pregunta}*\n\n` +
@@ -131,7 +129,6 @@ export default function EncuestasPage() {
         {/* Constructor */}
         <div style={{ background: '#18181b', border: '1px solid #27272a', borderRadius: 14, padding: 24 }}>
           <p style={{ color: '#fff', fontWeight: 600, fontSize: 15, marginBottom: 20 }}>Crear encuesta</p>
-
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
             {/* Pregunta */}
@@ -162,10 +159,7 @@ export default function EncuestasPage() {
                         setOpciones(n)
                       }}
                       placeholder={i < 2 ? `Opción ${i + 1} *` : `Opción ${i + 1} (opcional)`}
-                      style={{
-                        ...inputSt,
-                        borderColor: op.trim() ? '#FCD116' + '44' : '#27272a',
-                      }}
+                      style={{ ...inputSt, borderColor: op.trim() ? '#FCD11644' : '#27272a' }}
                     />
                   </div>
                 ))}
@@ -194,7 +188,6 @@ export default function EncuestasPage() {
                   </button>
                 ))}
               </div>
-
               {['city', 'department', 'interest'].includes(segment) && (
                 <input value={segVal}
                   onChange={e => { setSegVal(e.target.value); setPreview(null) }}
@@ -207,7 +200,7 @@ export default function EncuestasPage() {
               )}
             </div>
 
-            {/* Botón preview */}
+            {/* Preview */}
             <button onClick={handlePreview}
               style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 14px', borderRadius: 8, border: '1px solid #27272a', background: 'transparent', color: '#a1a1aa', fontSize: 13, cursor: 'pointer', width: 'fit-content' }}>
               <Users size={14} /> Ver cuántos la recibirán
@@ -222,10 +215,10 @@ export default function EncuestasPage() {
               </div>
             )}
 
-            {/* Vista previa del mensaje */}
+            {/* Vista previa */}
             {pregunta && optsValidas.length >= 2 && (
               <div style={{ background: '#09090b', borderRadius: 10, padding: 16 }}>
-                <p style={{ color: '#52525b', fontSize: 10, textTransform: 'uppercase', marginBottom: 8 }}>Vista previa del mensaje</p>
+                <p style={{ color: '#52525b', fontSize: 10, textTransform: 'uppercase', marginBottom: 8 }}>Vista previa</p>
                 <p style={{ color: '#FCD116', fontWeight: 700, fontSize: 13 }}>📊 Encuesta de la campaña 🇨🇴</p>
                 <p style={{ color: '#fff', fontSize: 13, marginTop: 6, fontWeight: 600 }}>{pregunta}</p>
                 <div style={{ marginTop: 8 }}>
@@ -234,7 +227,7 @@ export default function EncuestasPage() {
                   ))}
                 </div>
                 <p style={{ color: '#52525b', fontSize: 11, marginTop: 8, fontStyle: 'italic' }}>
-                  Responde con el número de tu opción (1, 2, 3...). Tu opinión importa.
+                  Responde con el número de tu opción. Tu opinión importa.
                 </p>
               </div>
             )}
@@ -245,7 +238,7 @@ export default function EncuestasPage() {
             <button onClick={handleSend} disabled={loading}
               style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '12px', borderRadius: 10, border: 'none', background: loading ? '#3f3f46' : '#6366f1', color: '#fff', fontSize: 14, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer' }}>
               <Send size={16} />
-              {loading ? 'Enviando encuesta...' : `Enviar encuesta a ${optsValidas.length} opciones`}
+              {loading ? 'Enviando encuesta...' : `Enviar encuesta (${optsValidas.length} opciones)`}
             </button>
 
           </div>

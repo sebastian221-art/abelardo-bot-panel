@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta property="og:title" content="Campaña Abelardo de la Espriella 2026"/>
+  <meta property="og:description" content="Habla directamente con el asistente oficial de la campaña 🇨🇴"/>
+  <meta property="og:image" content="https://defensoresdelapatria.com/logo.png"/>
+  <title>Abelardo 2026 — Chatea con nosotros</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a0505 100%);
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .card {
+      background: #18181b;
+      border: 1px solid #27272a;
+      border-radius: 24px;
+      padding: 40px 32px;
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+    }
+    .flag { font-size: 48px; margin-bottom: 16px; }
+    .logo {
+      width: 72px; height: 72px;
+      background: linear-gradient(135deg, #CE1126, #8B0000);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px; font-weight: 900; color: #FCD116;
+      margin: 0 auto 20px;
+      box-shadow: 0 8px 24px rgba(206,17,38,0.4);
+    }
+    h1 { color: #fff; font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+    .sub { color: #71717a; font-size: 14px; margin-bottom: 28px; line-height: 1.5; }
+    .ref-badge {
+      display: inline-block;
+      background: #FCD116;
+      color: #09090b;
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+    .wa-btn {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      background: #25D366;
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      padding: 16px 24px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+      text-decoration: none;
+      margin-bottom: 12px;
+      transition: transform .15s, box-shadow .15s;
+      box-shadow: 0 4px 20px rgba(37,211,102,0.3);
+    }
+    .wa-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(37,211,102,0.4); }
+    .wa-icon { font-size: 22px; }
+    .note { color: #52525b; font-size: 12px; margin-top: 16px; line-height: 1.5; }
+    .divider { border: none; border-top: 1px solid #27272a; margin: 20px 0; }
+    .stats {
+      display: grid; grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px; margin-bottom: 24px;
+    }
+    .stat { background: #09090b; border-radius: 10px; padding: 12px 8px; }
+    .stat-n { color: #FCD116; font-size: 18px; font-weight: 800; }
+    .stat-l { color: #52525b; font-size: 10px; margin-top: 2px; }
+    .loading {
+      color: #71717a; font-size: 13px; margin-top: 12px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">A</div>
+
+  <div id="refBadge" class="ref-badge" style="display:none"></div>
+
+  <h1>Abelardo de la Espriella</h1>
+  <p class="sub">Candidato Presidencial 2026 🇨🇴<br/>Habla directamente con nuestro asistente oficial</p>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-n">2026</div>
+      <div class="stat-l">Elecciones</div>
+    </div>
+    <div class="stat">
+      <div class="stat-n">24/7</div>
+      <div class="stat-l">Disponible</div>
+    </div>
+    <div class="stat">
+      <div class="stat-n">🇨🇴</div>
+      <div class="stat-l">Sur Santander</div>
+    </div>
+  </div>
+
+  <a id="waBtn" class="wa-btn" href="#">
+    <span class="wa-icon">💬</span>
+    Abrir chat en WhatsApp
+  </a>
+
+  <p class="loading" id="loadingMsg">Redirigiendo a WhatsApp...</p>
+
+  <hr class="divider"/>
+  <p class="note">
+    Al hacer clic serás redirigido a WhatsApp donde podrás<br/>
+    hablar con el asistente oficial de la campaña 🦁
+  </p>
+</div>
+
+<script>
+  // ── Configuración ─────────────────────────────────────────────
+  // IMPORTANTE: cambia este número por el número real de la campaña (con código de país, sin +)
+  const WA_NUMBER = '573155263833'  // ← reemplaza con tu número real
+
+  // ── Leer ref de la URL ────────────────────────────────────────
+  const params = new URLSearchParams(window.location.search)
+  const ref    = params.get('ref') || ''
+
+  const refMessages = {
+    'defensores': { badge: '🦁 Defensor de la Patria',     msg: 'Hola! Vengo desde el sitio de Defensores de la Patria y quiero recibir información de la campaña de Abelardo 🇨🇴' },
+    'firma':      { badge: '✍️ Firmante de la campaña',    msg: 'Hola! Firmé en apoyo a Abelardo y quiero recibir información de la campaña 🇨🇴' },
+    'evento':     { badge: '🎤 Desde un evento',           msg: 'Hola! Los conocí en un evento y quiero recibir información de la campaña de Abelardo 🇨🇴' },
+    'redes':      { badge: '📱 Desde redes sociales',      msg: 'Hola! Los encontré en redes y quiero saber más sobre la campaña de Abelardo 🇨🇴' },
+    'default':    { badge: null,                            msg: 'Hola! Quiero recibir información sobre la campaña de Abelardo de la Espriella 2026 🇨🇴' },
+  }
+
+  const refData = refMessages[ref] || refMessages['default']
+
+  // Mostrar badge si aplica
+  if (refData.badge) {
+    const badge = document.getElementById('refBadge')
+    badge.style.display = 'inline-block'
+    badge.textContent   = refData.badge
+  }
+
+  // Construir link de WhatsApp con mensaje prellenado
+  const waMsg  = encodeURIComponent(refData.msg)
+  const waLink = `https://wa.me/${WA_NUMBER}?text=${waMsg}`
+
+  document.getElementById('waBtn').href = waLink
+
+  // Auto-redirigir en móvil después de 1.5 segundos
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+  if (isMobile) {
+    document.getElementById('loadingMsg').style.display = 'block'
+    setTimeout(() => { window.location.href = waLink }, 1500)
+  }
+</script>
+</body>
+</html>
