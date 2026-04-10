@@ -1,9 +1,10 @@
 'use client'
-// 📄 panel/src/app/broadcast/nuevo/page.tsx  ← REEMPLAZA EL ANTERIOR
+// 📄 panel/src/app/broadcast/nuevo/page.tsx
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Layout from '@/components/Layout'
-import { createBroadcast, previewBroadcast, getGroups } from '@/lib/api'
+// ✅ sendBroadcast importado aquí arriba — ya no se importa dinámicamente
+import { createBroadcast, previewBroadcast, getGroups, sendBroadcast } from '@/lib/api'
 import { ArrowLeft, Send, Users, Image as ImageIcon, Video, X, AlertCircle, ExternalLink } from 'lucide-react'
 
 const inputSt: React.CSSProperties = {
@@ -130,7 +131,7 @@ export default function NuevoBroadcastPage() {
       }
       const b = await createBroadcast(payload) as Record<string,unknown>
       if (sendNow) {
-        const { sendBroadcast } = await import('@/lib/api')
+        // ✅ Uso directo — ya no hay dynamic import
         await sendBroadcast(b.id as number)
       }
       router.push('/broadcast')
