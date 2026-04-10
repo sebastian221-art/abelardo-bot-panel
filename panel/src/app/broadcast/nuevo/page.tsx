@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Layout from '@/components/Layout'
-// ✅ sendBroadcast importado aquí arriba — ya no se importa dinámicamente
 import { createBroadcast, previewBroadcast, getGroups, sendBroadcast } from '@/lib/api'
 import { ArrowLeft, Send, Users, Image as ImageIcon, Video, X, AlertCircle, ExternalLink } from 'lucide-react'
 
@@ -33,7 +32,7 @@ const BASE_SEGMENTS = [
   { value:'opted_in',   label:'Solo opt-in',          desc:'Quienes aceptaron recibir mensajes',              color:'#22c55e' },
   { value:'city',       label:'Por ciudad',            desc:'Filtra por nombre de ciudad',                    color:'#0ea5e9' },
   { value:'department', label:'Por departamento',      desc:'Filtra por departamento',                        color:'#6366f1' },
-  { value:'interest',   label:'Por interés',           desc:'seguridad / economia / salud / educacion / paz',  color:'#f59e0b' },
+  { value:'interest',   label:'Por interés',           desc:'seguridad / economia / salud / educacion / paz', color:'#f59e0b' },
 ]
 
 export default function NuevoBroadcastPage() {
@@ -97,8 +96,14 @@ export default function NuevoBroadcastPage() {
 
   const templateNeedsImage = tipo === 'template'
   const urlIsValid = mediaUrl.trim().startsWith('http://') || mediaUrl.trim().startsWith('https://')
-  const mediaIsSet = tipo === 'template' ? urlIsValid : !!(mediaUrl.trim() || mediaFile)
-  const canSend    = !saving && preview !== 0 && mediaIsSet
+
+  // ✅ CORREGIDO: texto no necesita media — solo imagen/video/template la necesitan
+  const mediaIsSet =
+    tipo === 'texto'    ? true :
+    tipo === 'template' ? urlIsValid :
+    !!(mediaUrl.trim() || mediaFile)
+
+  const canSend = !saving && preview !== null && preview !== 0 && mediaIsSet
 
   async function handleCreate(sendNow: boolean) {
     setError('')
@@ -111,7 +116,7 @@ export default function NuevoBroadcastPage() {
       return setError('La URL debe comenzar con https://')
     if ((tipo === 'imagen' || tipo === 'video') && !mediaUrl.trim() && !mediaFile)
       return setError('Agrega una URL de media o sube un archivo')
-    if (preview === 0) return setError('No hay contactos que cumplan el segmento seleccionado')
+    if (preview === 0 || preview === null) return setError('No hay contactos que cumplan el segmento seleccionado')
     if (previewWarn) return setError(previewWarn)
 
     const finalMediaUrl = tipo === 'template' ? mediaUrl.trim() : (mediaFile ? mediaPreview : mediaUrl)
@@ -131,7 +136,7 @@ export default function NuevoBroadcastPage() {
       }
       const b = await createBroadcast(payload) as Record<string,unknown>
       if (sendNow) {
-        // ✅ Uso directo — ya no hay dynamic import
+        // ✅ Import estático arriba — sin dynamic import
         await sendBroadcast(b.id as number)
       }
       router.push('/broadcast')
