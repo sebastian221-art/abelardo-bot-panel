@@ -1,5 +1,5 @@
 'use client'
-// 📄 panel/src/app/broadcast/nuevo/page.tsx
+// 📄 panel/src/app/broadcast/nuevo/page.tsx  ← REEMPLAZA EL ANTERIOR
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Layout from '@/components/Layout'
@@ -36,21 +36,22 @@ const BASE_SEGMENTS = [
 ]
 
 export default function NuevoBroadcastPage() {
-  const router   = useRouter()
+  const router = useRouter()
 
-  const [title,        setTitle]        = useState('')
-  const [message,      setMessage]      = useState('')
-  const [tipo,         setTipo]         = useState('template')
-  const [segment,      setSegment]      = useState('todos')
-  const [segVal,       setSegVal]       = useState('')
-  const [templateName, setTemplateName] = useState('bienvenida_campana')
-  const [mediaUrl,     setMediaUrl]     = useState('')
-  const [preview,      setPreview]      = useState<number | null>(null)
-  const [previewWarn,  setPreviewWarn]  = useState('')
-  const [saving,       setSaving]       = useState(false)
-  const [error,        setError]        = useState('')
-  const [groups,       setGroups]       = useState<Group[]>([])
-  const [showPreview,  setShowPreview]  = useState(false)
+  const [title,            setTitle]            = useState('')
+  const [message,          setMessage]          = useState('')
+  const [tipo,             setTipo]             = useState('template')
+  const [segment,          setSegment]          = useState('todos')
+  const [segVal,           setSegVal]           = useState('')
+  const [templateName,     setTemplateName]     = useState('bienvenida_campana')
+  const [templateHasImage, setTemplateHasImage] = useState(true)
+  const [mediaUrl,         setMediaUrl]         = useState('')
+  const [preview,          setPreview]          = useState<number | null>(null)
+  const [previewWarn,      setPreviewWarn]      = useState('')
+  const [saving,           setSaving]           = useState(false)
+  const [error,            setError]            = useState('')
+  const [groups,           setGroups]           = useState<Group[]>([])
+  const [showPreview,      setShowPreview]      = useState(false)
 
   const GROUP_SEGMENTS = groups.map(g => ({
     value: `group_${g.id}`,
@@ -83,11 +84,14 @@ export default function NuevoBroadcastPage() {
 
   const urlIsValid = mediaUrl.trim().startsWith('http://') || mediaUrl.trim().startsWith('https://')
 
+  // La imagen es obligatoria solo si la plantilla tiene imagen marcada
+  const imageRequired = tipo === 'template' && templateHasImage
   const mediaIsSet =
-    tipo === 'texto'    ? true :
-    tipo === 'template' ? urlIsValid :
-    tipo === 'imagen'   ? urlIsValid :
-    tipo === 'video'    ? urlIsValid :
+    tipo === 'texto'                          ? true :
+    tipo === 'template' && !templateHasImage  ? true :
+    tipo === 'template' && templateHasImage   ? urlIsValid :
+    tipo === 'imagen'                         ? urlIsValid :
+    tipo === 'video'                          ? urlIsValid :
     true
 
   const canSend = !saving && preview !== null && preview !== 0 && mediaIsSet
@@ -97,8 +101,8 @@ export default function NuevoBroadcastPage() {
     if (!title.trim()) return setError('El título es obligatorio')
     if (tipo === 'template' && !templateName.trim()) return setError('Escribe el nombre de la plantilla')
     if (tipo !== 'template' && !message.trim()) return setError('El mensaje es obligatorio')
-    if (tipo === 'template' && !urlIsValid)
-      return setError('La plantilla requiere una URL pública de imagen (https://...)')
+    if (imageRequired && !urlIsValid)
+      return setError('La plantilla tiene imagen — pega una URL pública válida (https://...)')
     if ((tipo === 'imagen' || tipo === 'video') && !urlIsValid)
       return setError('Pega una URL pública válida que empiece con https://')
     if (preview === 0 || preview === null) return setError('No hay contactos que cumplan el segmento seleccionado')
@@ -116,7 +120,7 @@ export default function NuevoBroadcastPage() {
         segment_value: realSegVal,
         template_name: tipo === 'template' ? templateName : '',
         media_url:     mediaUrl.trim(),
-        media_type:    tipo === 'imagen' ? 'image' : tipo === 'video' ? 'video' : tipo === 'template' ? 'image' : '',
+        media_type:    tipo === 'imagen' ? 'image' : tipo === 'video' ? 'video' : (tipo === 'template' && templateHasImage) ? 'image' : '',
       }
       const b = await createBroadcast(payload) as Record<string,unknown>
       if (sendNow) await sendBroadcast(b.id as number)
@@ -129,45 +133,6 @@ export default function NuevoBroadcastPage() {
   }
 
   const selectedSeg = ALL_SEGMENTS.find(s => s.value === segment)
-
-  // Guía según tipo de media
-  const mediaGuide: Record<string, { title: string; steps: string[]; placeholder: string; tip: string }> = {
-    imagen: {
-      title: '¿Cómo obtener la URL de tu imagen?',
-      steps: [
-        '1. Ve a imgbb.com (gratis, sin registro)',
-        '2. Sube tu imagen',
-        '3. Copia el "Direct link" (termina en .jpg o .png)',
-        '4. Pégala abajo',
-      ],
-      placeholder: 'https://i.ibb.co/xxxxxxx/imagen.jpg',
-      tip: 'La URL debe terminar en .jpg, .jpeg, .png o .webp',
-    },
-    video: {
-      title: '¿Cómo obtener la URL de tu video?',
-      steps: [
-        '1. Ve a streamable.com (gratis)',
-        '2. Sube tu video MP4 (máx 16 MB)',
-        '3. Cuando cargue, haz clic derecho en el video',
-        '4. Selecciona "Copiar dirección del video"',
-        '5. Pégala abajo — debe terminar en .mp4',
-      ],
-      placeholder: 'https://streamable.com/e/abc123.mp4',
-      tip: 'Solo MP4 — máximo 16 MB. Streamable.com es gratuito.',
-    },
-    template: {
-      title: '¿Cómo obtener la URL de la imagen del encabezado?',
-      steps: [
-        '1. Ve a imgbb.com',
-        '2. Sube la imagen del encabezado de tu plantilla',
-        '3. Copia el "Direct link"',
-      ],
-      placeholder: 'https://i.ibb.co/xxxxxxx/encabezado.jpg',
-      tip: 'Debe ser la misma imagen que usaste al crear la plantilla en Meta',
-    },
-  }
-
-  const guide = mediaGuide[tipo]
 
   return (
     <Layout>
@@ -210,19 +175,81 @@ export default function NuevoBroadcastPage() {
             </div>
           </div>
 
-          {/* Nombre de plantilla */}
+          {/* Plantilla */}
           {tipo === 'template' && (
-            <div>
-              <label style={labelSt}>Nombre de la plantilla aprobada *</label>
-              <input value={templateName} onChange={e => setTemplateName(e.target.value)}
-                placeholder="ej: bienvenida_campana" style={inputSt}/>
-              <p style={{ color:'#52525b', fontSize:11, marginTop:4 }}>
-                Exactamente como aparece en Meta → WhatsApp Manager → Plantillas
-              </p>
+            <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+              <div>
+                <label style={labelSt}>Nombre de la plantilla aprobada *</label>
+                <input value={templateName} onChange={e => setTemplateName(e.target.value)}
+                  placeholder="ej: bienvenida_campana" style={inputSt}/>
+                <p style={{ color:'#52525b', fontSize:11, marginTop:4 }}>
+                  Exactamente como aparece en Meta → WhatsApp Manager → Plantillas
+                </p>
+              </div>
+
+              {/* Toggle imagen */}
+              <div style={{ padding:'12px 14px', background:'#18181b', border:'1px solid #27272a', borderRadius:9 }}>
+                <label style={{ display:'flex', alignItems:'center', gap:10, cursor:'pointer' }}>
+                  <div
+                    onClick={() => { setTemplateHasImage(!templateHasImage); setMediaUrl('') }}
+                    style={{
+                      width:38, height:22, borderRadius:11, cursor:'pointer', transition:'background .2s',
+                      background: templateHasImage ? '#22c55e' : '#3f3f46',
+                      position:'relative', flexShrink:0,
+                    }}>
+                    <div style={{
+                      position:'absolute', top:3, left: templateHasImage ? 18 : 3,
+                      width:16, height:16, borderRadius:8, background:'#fff', transition:'left .2s',
+                    }}/>
+                  </div>
+                  <div>
+                    <p style={{ color:'#fff', fontSize:13, fontWeight:500 }}>
+                      {templateHasImage ? '📷 Mi plantilla tiene imagen en el encabezado' : '📝 Mi plantilla NO tiene imagen (solo texto)'}
+                    </p>
+                    <p style={{ color:'#52525b', fontSize:11, marginTop:2 }}>
+                      {templateHasImage ? 'Deberás pegar la URL de la imagen abajo' : 'Se enviará solo con texto, sin imagen'}
+                    </p>
+                  </div>
+                </label>
+              </div>
+
+              {/* URL imagen si tiene imagen */}
+              {templateHasImage && (
+                <div>
+                  <label style={labelSt}>URL de la imagen del encabezado *</label>
+                  <div style={{ padding:'10px 14px', background:'#0a1628', border:'1px solid #0ea5e933', borderRadius:8, marginBottom:10 }}>
+                    <p style={{ color:'#7dd3fc', fontSize:12, lineHeight:1.7 }}>
+                      Sube la imagen a{' '}
+                      <a href="https://imgbb.com" target="_blank" rel="noreferrer"
+                        style={{ color:'#38bdf8', display:'inline-flex', alignItems:'center', gap:2 }}>
+                        imgbb.com <ExternalLink size={10}/>
+                      </a>
+                      {' '}→ copia el <strong>"Direct link"</strong> → pégalo aquí
+                    </p>
+                  </div>
+                  <input value={mediaUrl} onChange={e => setMediaUrl(e.target.value)}
+                    placeholder="https://i.ibb.co/xxxxxxx/imagen.jpg"
+                    style={{ ...inputSt, borderColor: mediaUrl && !urlIsValid ? '#ef4444' : urlIsValid ? '#22c55e44' : '#27272a' }}/>
+                  {mediaUrl && !urlIsValid && (
+                    <p style={{ color:'#fca5a5', fontSize:11, marginTop:5 }}>La URL debe comenzar con https://</p>
+                  )}
+                  {urlIsValid && (
+                    <p style={{ color:'#4ade80', fontSize:11, marginTop:5 }}>✓ URL válida</p>
+                  )}
+                  {urlIsValid && (
+                    <div style={{ marginTop:10, borderRadius:8, overflow:'hidden', border:'1px solid #22c55e33', maxWidth:280 }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={mediaUrl} alt="preview"
+                        style={{ width:'100%', display:'block', maxHeight:150, objectFit:'cover' }}
+                        onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}/>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
-          {/* Mensaje */}
+          {/* Mensaje texto */}
           {tipo !== 'template' && (
             <div>
               <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}>
@@ -249,57 +276,37 @@ export default function NuevoBroadcastPage() {
             </div>
           )}
 
-          {/* URL de media — para imagen, video y template */}
-          {guide && (
+          {/* URL imagen o video para tipos imagen/video */}
+          {(tipo === 'imagen' || tipo === 'video') && (
             <div>
-              <label style={labelSt}>
-                {tipo === 'template' ? 'URL imagen encabezado *' : tipo === 'imagen' ? 'URL de la imagen *' : 'URL del video *'}
-              </label>
-
-              {/* Guía paso a paso */}
-              <div style={{ padding:'12px 14px', background:'#0a1628', border:'1px solid #0ea5e933', borderRadius:8, marginBottom:10 }}>
-                <p style={{ color:'#7dd3fc', fontSize:12, fontWeight:600, marginBottom:6 }}>{guide.title}</p>
-                {guide.steps.map((s, i) => (
-                  <p key={i} style={{ color:'#7dd3fc', fontSize:12, lineHeight:1.7 }}>{s}</p>
-                ))}
-                {tipo === 'imagen' && (
-                  <a href="https://imgbb.com" target="_blank" rel="noreferrer"
-                    style={{ color:'#38bdf8', fontSize:12, display:'inline-flex', alignItems:'center', gap:4, marginTop:4 }}>
-                    Abrir imgbb.com <ExternalLink size={10}/>
-                  </a>
-                )}
-                {tipo === 'video' && (
-                  <a href="https://streamable.com" target="_blank" rel="noreferrer"
-                    style={{ color:'#38bdf8', fontSize:12, display:'inline-flex', alignItems:'center', gap:4, marginTop:4 }}>
-                    Abrir streamable.com <ExternalLink size={10}/>
-                  </a>
-                )}
-                {tipo === 'template' && (
-                  <a href="https://imgbb.com" target="_blank" rel="noreferrer"
-                    style={{ color:'#38bdf8', fontSize:12, display:'inline-flex', alignItems:'center', gap:4, marginTop:4 }}>
-                    Abrir imgbb.com <ExternalLink size={10}/>
-                  </a>
+              <label style={labelSt}>{tipo === 'imagen' ? 'URL de la imagen *' : 'URL del video *'}</label>
+              <div style={{ padding:'10px 14px', background:'#0a1628', border:'1px solid #0ea5e933', borderRadius:8, marginBottom:10 }}>
+                {tipo === 'imagen' ? (
+                  <p style={{ color:'#7dd3fc', fontSize:12, lineHeight:1.7 }}>
+                    Sube en{' '}
+                    <a href="https://imgbb.com" target="_blank" rel="noreferrer"
+                      style={{ color:'#38bdf8', display:'inline-flex', alignItems:'center', gap:2 }}>
+                      imgbb.com <ExternalLink size={10}/>
+                    </a>
+                    {' '}→ copia "Direct link" → pégalo aquí
+                  </p>
+                ) : (
+                  <p style={{ color:'#7dd3fc', fontSize:12, lineHeight:1.7 }}>
+                    Sube en{' '}
+                    <a href="https://streamable.com" target="_blank" rel="noreferrer"
+                      style={{ color:'#38bdf8', display:'inline-flex', alignItems:'center', gap:2 }}>
+                      streamable.com <ExternalLink size={10}/>
+                    </a>
+                    {' '}→ clic derecho en el video → copiar dirección → pégala aquí (debe terminar en .mp4)
+                  </p>
                 )}
               </div>
-
-              <input
-                value={mediaUrl}
-                onChange={e => setMediaUrl(e.target.value)}
-                placeholder={guide.placeholder}
-                style={{
-                  ...inputSt,
-                  borderColor: mediaUrl && !urlIsValid ? '#ef4444' : urlIsValid ? '#22c55e44' : '#27272a'
-                }}
-              />
-
+              <input value={mediaUrl} onChange={e => setMediaUrl(e.target.value)}
+                placeholder={tipo === 'imagen' ? 'https://i.ibb.co/xxx/imagen.jpg' : 'https://streamable.com/e/abc.mp4'}
+                style={{ ...inputSt, borderColor: mediaUrl && !urlIsValid ? '#ef4444' : urlIsValid ? '#22c55e44' : '#27272a' }}/>
               {mediaUrl && !urlIsValid && (
                 <p style={{ color:'#fca5a5', fontSize:11, marginTop:5 }}>La URL debe comenzar con https://</p>
               )}
-              {urlIsValid && (
-                <p style={{ color:'#4ade80', fontSize:11, marginTop:5 }}>✓ URL válida — {guide.tip}</p>
-              )}
-
-              {/* Preview de imagen */}
               {urlIsValid && tipo === 'imagen' && (
                 <div style={{ marginTop:10, borderRadius:10, overflow:'hidden', border:'1px solid #27272a', maxWidth:280 }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -308,8 +315,6 @@ export default function NuevoBroadcastPage() {
                     onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}/>
                 </div>
               )}
-
-              {/* Preview de video */}
               {urlIsValid && tipo === 'video' && (
                 <div style={{ marginTop:10, borderRadius:10, overflow:'hidden', border:'1px solid #27272a', maxWidth:400 }}>
                   <video src={mediaUrl} controls
@@ -353,7 +358,7 @@ export default function NuevoBroadcastPage() {
             )}
           </div>
 
-          {/* Contador de contactos */}
+          {/* Contador contactos */}
           {preview !== null && (
             <div style={{ background:preview===0 ? '#3f1212' : '#0c1a0c', border:`1px solid ${preview===0 ? '#7f1d1d' : '#14532d'}`, borderRadius:10, padding:'12px 16px', display:'flex', alignItems:'center', gap:10 }}>
               <Users size={16} style={{ color:preview===0 ? '#ef4444' : '#22c55e', flexShrink:0 }}/>
@@ -391,9 +396,9 @@ export default function NuevoBroadcastPage() {
             </button>
           </div>
 
-          {!mediaIsSet && tipo !== 'texto' && (
+          {!mediaIsSet && (
             <p style={{ color:'#f87171', fontSize:12, textAlign:'center' }}>
-              ↑ Pega la URL pública para poder enviar
+              ↑ Pega la URL de la imagen para poder enviar
             </p>
           )}
 
